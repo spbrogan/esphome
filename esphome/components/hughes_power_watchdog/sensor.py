@@ -10,8 +10,11 @@ from esphome.const import (
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_VOLTAGE,
+    ICON_CURRENT_AC,
+    ICON_POWER,
     STATE_CLASS_MEASUREMENT,
     UNIT_AMPERE,
+    UNIT_KILOWATT_HOURS,
     UNIT_VOLT,
     UNIT_WATT
 )
@@ -27,8 +30,8 @@ CONF_CURRENT_LINE_2 = CONF_CURRENT + _CONF_LINE_2
 CONF_POWER_LINE_2 = CONF_POWER + _CONF_LINE_2
 
 
-
-ICON_PROPANE_TANK = "mdi:propane-tank"
+ICON_VOLTAGE = "mdi:flash-triangle"
+ICON_TOTAL_POWER = "mdi:sine-wave"
 
 
 CODEOWNERS = ["@spbrogan"]
@@ -45,49 +48,50 @@ CONFIG_SCHEMA = (
             cv.GenerateID(): cv.declare_id(HughesPowerWatchdog),
             cv.Optional(CONF_VOLTAGE_LINE_1): sensor.sensor_schema(
                 unit_of_measurement=UNIT_VOLT,
-                #icon=ICON_THERMOMETER,
-                accuracy_decimals=0,
+                icon=ICON_VOLTAGE,
+                accuracy_decimals=1,
                 device_class=DEVICE_CLASS_VOLTAGE,
                 state_class=STATE_CLASS_MEASUREMENT,
             ),
             cv.Optional(CONF_CURRENT_LINE_1): sensor.sensor_schema(
                 unit_of_measurement=UNIT_AMPERE,
-                #icon=ICON_PROPANE_TANK,
-                accuracy_decimals=0,
+                icon=ICON_CURRENT_AC,
+                accuracy_decimals=2,
                 device_class=DEVICE_CLASS_CURRENT,
                 state_class=STATE_CLASS_MEASUREMENT,
             ),
             cv.Optional(CONF_POWER_LINE_1): sensor.sensor_schema(
                 unit_of_measurement=UNIT_WATT,
-                #icon=ICON_RULER,
-                accuracy_decimals=0,
+                icon=ICON_POWER,
+                accuracy_decimals=2,
                 device_class=DEVICE_CLASS_POWER,
                 state_class=STATE_CLASS_MEASUREMENT,
             ),
             cv.Optional(CONF_VOLTAGE_LINE_2): sensor.sensor_schema(
                 unit_of_measurement=UNIT_VOLT,
-                #icon=ICON_THERMOMETER,
-                accuracy_decimals=0,
+                icon=ICON_VOLTAGE,
+                accuracy_decimals=1,
                 device_class=DEVICE_CLASS_VOLTAGE,
                 state_class=STATE_CLASS_MEASUREMENT,
             ),
             cv.Optional(CONF_CURRENT_LINE_2): sensor.sensor_schema(
                 unit_of_measurement=UNIT_AMPERE,
-                #icon=ICON_PROPANE_TANK,
-                accuracy_decimals=0,
+                icon=ICON_CURRENT_AC,
+                accuracy_decimals=2,
                 device_class=DEVICE_CLASS_CURRENT,
                 state_class=STATE_CLASS_MEASUREMENT,
             ),
             cv.Optional(CONF_POWER_LINE_2): sensor.sensor_schema(
                 unit_of_measurement=UNIT_WATT,
-                #icon=ICON_RULER,
-                accuracy_decimals=0,
+                icon=ICON_POWER,
+                accuracy_decimals=2,
                 device_class=DEVICE_CLASS_POWER,
                 state_class=STATE_CLASS_MEASUREMENT,
             ),
             cv.Optional(CONF_TOTAL_POWER): sensor.sensor_schema(
-                unit_of_measurement=UNIT_WATT,
-                accuracy_decimals=0,
+                unit_of_measurement=UNIT_KILOWATT_HOURS,
+                icon=ICON_TOTAL_POWER,
+                accuracy_decimals=2,
                 device_class=DEVICE_CLASS_POWER,
                 state_class=STATE_CLASS_MEASUREMENT,
             ),
@@ -130,6 +134,3 @@ async def to_code(config):
     if CONF_TOTAL_POWER in config:
         sens = await sensor.new_sensor(config[CONF_TOTAL_POWER])
         cg.add(var.set_cumulative_energy(sens))
-    
-
-    
