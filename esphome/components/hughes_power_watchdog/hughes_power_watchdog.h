@@ -17,7 +17,7 @@ static const char *const SERVICE_UUID = "0000ffe0-0000-1000-8000-00805f9b34fb"; 
 static const char *const CHARACTERISTIC_UUID_TX = "0000ffe2-0000-1000-8000-00805f9b34fb";  // TX
 static const char *const CHARACTERISTIC_UUID_RX = "0000fff5-0000-1000-8000-00805f9b34fb";  // RX
 
-class HughesPowerWatchdog : public Component, public ble_client::BLEClientNode {
+class HughesPowerWatchdog : public PollingComponent, public ble_client::BLEClientNode {
  public:
   HughesPowerWatchdog();
   void dump_config() override;
@@ -52,6 +52,14 @@ class HughesPowerWatchdog : public Component, public ble_client::BLEClientNode {
   esp32_ble_tracker::ESPBTUUID char_uuid_;
 
   uint8_t msg_buffer_[40];
+  float line1_v_;  // line 1 volts
+  float line2_v_;  // line 2 volts
+  float line1_c_;  // line 1 current
+  float line2_c_;  // line 2 current
+  float line1_p_;  // line 1 power
+  float line2_p_;  // line 2 power
+  float line1_ce_; // line 1 cumulative energy
+  float line2_ce_; // line 2 cumulative energy
 };
 
 }  // namespace hughes_power_watchdog

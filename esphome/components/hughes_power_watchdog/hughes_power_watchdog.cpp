@@ -17,9 +17,18 @@ static const char *const TAG = "hughes_power_watchdog";
 #define IsLine2(data) ((data[37] == 1) && (data[38] == 1) && (data[39] == 1))
 
 HughesPowerWatchdog::HughesPowerWatchdog()
-    : service_uuid_(esp32_ble_tracker::ESPBTUUID::from_raw(SERVICE_UUID)),
+    : PollingComponent(5000),
+      service_uuid_(esp32_ble_tracker::ESPBTUUID::from_raw(SERVICE_UUID)),
       char_uuid_(esp32_ble_tracker::ESPBTUUID::from_raw(CHARACTERISTIC_UUID_TX)) {
   this->chunk_1_content_populated = 0;
+  this->line1_v_ = 0.0f;
+  this->line2_v_ = 0.0f;
+  this->line1_c_ = 0.0f;
+  this->line2_c_ = 0.0f;
+  this->line1_p_ = 0.0f;
+  this->line2_p_ = 0.0f;
+  this->line1_ce_ = 0.0f;
+  this->line2_ce_ = 0.0f;
 }
 
 void HughesPowerWatchdog::dump_config() {
@@ -151,39 +160,43 @@ void HughesPowerWatchdog::process_tx_notification(uint8_t *value, uint16_t value
   float energy = (float) ReadBigEndianInt32(this->msg_buffer_, 15) / 10000;
 
   if (line == 1) {
-    if (this->voltage_l1_ != nullptr) {
-      this->voltage_l1_->publish_state(volts);
-    }
-
-    if (this->current_l1_ != nullptr) {
-      this->current_l1_->publish_state(amps);
-    }
-
-    if (this->power_l1_ != nullptr) {
-      this->power_l1_->publish_state(watts);
-    }
-
-    /** ONLY VALID FOR LINE 2
-    if (this->cumulative_energy_ != nullptr) {
-      this->cumulative_energy_->publish_state(energy);
-    }
-    **/
+    this->line1_v_ = volts;
+    this->line1_c_ = amps;
+    this->line1_p_ = watts;
+    this->line1_ce_ = energy;
   } else {
-    if (this->voltage_l2_ != nullptr) {
-      this->voltage_l2_->publish_state(volts);
-    }
+    this->line2_v_ = volts;
+    this->line2_c_ = amps;
+    this->line2_p_ = watts;
+    this->line2_ce_ = energy;
+  }
+}
 
-    if (this->current_l2_ != nullptr) {
-      this->current_l2_->publish_state(amps);
-    }
+void HughesPowerWatchdog::update() {
+  ESP_LOGV(TAG, "Update Called");
+  if (this->voltage_l1_ != nullptr) {
+    this->voltage_l1_->publish_state(this->line1_v_);
+  }
+  if (this->voltage_l2_ != nullptr) {
+    this->voltage_l2_->publish_state(this->line2_v_);
+  }
 
-    if (this->power_l2_ != nullptr) {
-      this->power_l2_->publish_state(watts);
-    }
+  if (this->current_l1_ != nullptr) {
+    this->current_l1_->publish_state(this->line1_c_);
+  }
+  if (this->current_l2_ != nullptr) {
+    this->current_l2_->publish_state(this->line2_c_);
+  }
 
-    if (this->cumulative_energy_ != nullptr) {
-      this->cumulative_energy_->publish_state(energy);
-    }
+  if (this->power_l1_ != nullptr) {
+    this->power_l1_->publish_state(this->line1_p_);
+  }
+  if (this->power_l2_ != nullptr) {
+    this->power_l2_->publish_state(this->line2_p_);
+  }
+
+  if (this->cumulative_energy_ != nullptr) {
+    this->cumulative_energy_->raw_state = this->line1_ce_ + this->line2_ce_;
   }
 }
 
