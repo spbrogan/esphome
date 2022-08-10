@@ -196,7 +196,7 @@ void HughesPowerWatchdog::update() {
   }
 
   if (this->cumulative_energy_ != nullptr) {
-    this->cumulative_energy_->raw_state = this->line1_ce_ + this->line2_ce_;
+    this->cumulative_energy_->publish_state(this->line1_ce_ + this->line2_ce_);
   }
 }
 
