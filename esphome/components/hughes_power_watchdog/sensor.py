@@ -1,6 +1,6 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.components import sensor, ble_client, esp32_ble_tracker
+from esphome.components import sensor, ble_client
 from esphome.const import (
     CONF_ID,
     CONF_VOLTAGE,
@@ -97,7 +97,7 @@ CONFIG_SCHEMA = (
             ),
         }
     )
-    .extend(cv.COMPONENT_SCHEMA)
+    .extend(cv.polling_component_schema("5sec"))
     .extend(ble_client.BLE_CLIENT_SCHEMA)
 )
 
