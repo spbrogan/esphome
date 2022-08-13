@@ -105,19 +105,15 @@ CONFIG_SCHEMA = (
                 device_class=DEVICE_CLASS_ENERGY,
                 state_class=STATE_CLASS_TOTAL_INCREASING,
             ),
-
             cv.Optional(CONF_ERROR_CODE): sensor.sensor_schema(
                 icon=ICON_ERROR_CODE,
                 accuracy_decimals=0,
                 device_class=DEVICE_CLASS_PROBLEM,
                 state_class=STATE_CLASS_NONE,    
             ),
-
             cv.Optional(CONF_ERROR_TEXT): text_sensor.text_sensor_schema(
                 icon=ICON_ERROR_TEXT
-            )
-
-            #add error code and error text
+            ),
         }
     )
     .extend(cv.polling_component_schema("5sec"))
