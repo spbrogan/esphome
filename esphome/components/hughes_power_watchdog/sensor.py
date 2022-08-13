@@ -8,6 +8,7 @@ from esphome.const import (
     CONF_POWER,
     CONF_TOTAL_POWER,
     DEVICE_CLASS_CURRENT,
+    DEVICE_CLASS_EMPTY,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_PROBLEM,
@@ -108,7 +109,7 @@ CONFIG_SCHEMA = (
             cv.Optional(CONF_ERROR_CODE): sensor.sensor_schema(
                 icon=ICON_ERROR_CODE,
                 accuracy_decimals=0,
-                device_class=DEVICE_CLASS_PROBLEM,
+                device_class=DEVICE_CLASS_EMPTY,
                 state_class=STATE_CLASS_NONE,    
             ),
             cv.Optional(CONF_ERROR_TEXT): text_sensor.text_sensor_schema(
