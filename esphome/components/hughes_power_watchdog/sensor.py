@@ -1,6 +1,6 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.components import sensor, ble_client
+from esphome.components import sensor, ble_client, text_sensor
 from esphome.const import (
     CONF_ID,
     CONF_VOLTAGE,
@@ -8,18 +8,22 @@ from esphome.const import (
     CONF_POWER,
     CONF_TOTAL_POWER,
     DEVICE_CLASS_CURRENT,
+    DEVICE_CLASS_EMPTY,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
+    DEVICE_CLASS_PROBLEM,
     DEVICE_CLASS_VOLTAGE,
     ICON_CURRENT_AC,
     ICON_POWER,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_NONE,
     STATE_CLASS_TOTAL_INCREASING,
     UNIT_AMPERE,
     UNIT_KILOWATT_HOURS,
     UNIT_VOLT,
     UNIT_WATT
 )
+
 _CONF_LINE_1 = "_line_1"
 _CONF_LINE_2 = "_line_2"
 
@@ -31,11 +35,16 @@ CONF_VOLTAGE_LINE_2 = CONF_VOLTAGE + _CONF_LINE_2
 CONF_CURRENT_LINE_2 = CONF_CURRENT + _CONF_LINE_2
 CONF_POWER_LINE_2 = CONF_POWER + _CONF_LINE_2
 
+CONF_ERROR_CODE = "error_code_value"
+CONF_ERROR_TEXT = "error_code_text"
+
 
 ICON_VOLTAGE = "mdi:flash-triangle"
 ICON_TOTAL_POWER = "mdi:sine-wave"
+ICON_ERROR_CODE = "mdi:alert-circle"
+ICON_ERROR_TEXT = "mdi:tooltip-text"
 
-
+AUTO_LOAD = ["text_sensor"]
 CODEOWNERS = ["@spbrogan"]
 DEPENDENCIES = ["ble_client"]
 
@@ -97,12 +106,20 @@ CONFIG_SCHEMA = (
                 device_class=DEVICE_CLASS_ENERGY,
                 state_class=STATE_CLASS_TOTAL_INCREASING,
             ),
+            cv.Optional(CONF_ERROR_CODE): sensor.sensor_schema(
+                icon=ICON_ERROR_CODE,
+                accuracy_decimals=0,
+                device_class=DEVICE_CLASS_EMPTY,
+                state_class=STATE_CLASS_NONE,    
+            ),
+             cv.Optional(CONF_ERROR_TEXT): text_sensor.text_sensor_schema(
+                icon=ICON_ERROR_TEXT
+            ),
         }
     )
     .extend(cv.polling_component_schema("5sec"))
     .extend(ble_client.BLE_CLIENT_SCHEMA)
 )
-
 
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
@@ -136,3 +153,11 @@ async def to_code(config):
     if CONF_TOTAL_POWER in config:
         sens = await sensor.new_sensor(config[CONF_TOTAL_POWER])
         cg.add(var.set_cumulative_energy(sens))
+    
+    if CONF_ERROR_CODE in config:
+        sens = await sensor.new_sensor(config[CONF_ERROR_CODE])
+        cg.add(var.set_error_code(sens))
+    
+    if CONF_ERROR_TEXT in config:
+        sens = await text_sensor.new_text_sensor(config[CONF_ERROR_TEXT])
+        cg.add(var.set_error_text(sens))
