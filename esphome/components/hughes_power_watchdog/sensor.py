@@ -46,7 +46,7 @@ ICON_ERROR_TEXT = "mdi:tooltip-text"
 
 
 CODEOWNERS = ["@spbrogan"]
-DEPENDENCIES = ["ble_client"]
+DEPENDENCIES = ["ble_client", "text_sensor"]
 
 hughes_power_watchdog_ns = cg.esphome_ns.namespace("hughes_power_watchdog")
 HughesPowerWatchdog = hughes_power_watchdog_ns.class_(
