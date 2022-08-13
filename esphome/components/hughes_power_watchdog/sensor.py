@@ -22,7 +22,7 @@ from esphome.const import (
     UNIT_VOLT,
     UNIT_WATT
 )
-from esphome.esphome.components.ble_client import text_sensor
+#from esphome.esphome.components.ble_client import text_sensor
 _CONF_LINE_1 = "_line_1"
 _CONF_LINE_2 = "_line_2"
 
@@ -34,7 +34,7 @@ CONF_VOLTAGE_LINE_2 = CONF_VOLTAGE + _CONF_LINE_2
 CONF_CURRENT_LINE_2 = CONF_CURRENT + _CONF_LINE_2
 CONF_POWER_LINE_2 = CONF_POWER + _CONF_LINE_2
 
-CONF_ERROR_CODE = "error_code"
+CONF_ERROR_CODE = "error_code_value"
 CONF_ERROR_TEXT = "error_code_text"
 
 
