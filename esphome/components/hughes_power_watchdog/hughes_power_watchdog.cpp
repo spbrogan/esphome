@@ -7,6 +7,8 @@ namespace hughes_power_watchdog {
 
 static const char *const TAG = "hughes_power_watchdog";
 
+/** Define the error codes and help string.  Found by looking at app **/
+
 static const std::string Error_00 = "All Good";  // Not error.
 
 static const std::string Error_01 =
@@ -60,9 +62,12 @@ static const std::string Error_09 = "The Power Watchdog is sensing the surge abs
   many surges before they're done.  Fortunately, the Watchdog's surge absorption board is replaceable. Go to\
   hughesautoformers.com and order a new board.";
 
+// Array of error strings indexed by error code value
 static const std::string ErrorText[] = {Error_00, Error_01, Error_02, Error_03, Error_04,
                                         Error_05, Error_06, Error_07, Error_08, Error_09};
 
+
+// Macro to convert 4 bytes of big endian data into int
 #define ReadBigEndianInt32(data, offset) \
   ((data[offset + 3] << 0) | (data[offset + 2] << 8) | (data[offset + 1] << 16) | (data[offset + 0] << 24))
 
@@ -86,6 +91,7 @@ HughesPowerWatchdog::HughesPowerWatchdog()
   this->line1_ce_ = 0.0f;
   this->line2_ce_ = 0.0f;
   this->error_code_value_ = 0;
+  this->new_data_ = false;
 }
 
 void HughesPowerWatchdog::dump_config() {
@@ -96,6 +102,7 @@ void HughesPowerWatchdog::dump_config() {
   LOG_SENSOR("  ", "Voltage Line 2", this->voltage_l2_);
   LOG_SENSOR("  ", "Current Line 2", this->current_l2_);
   LOG_SENSOR("  ", "Power Line 2", this->power_l2_);
+  LOG_SENSOR("  ", "Power Combined", this->power_combined_);
   LOG_SENSOR("  ", "Cumulative Energy", this->cumulative_energy_);
   LOG_SENSOR("  ", "Error Code Value", this->error_code_);
   LOG_TEXT_SENSOR("  ", "Error Text String", this->error_text_);
@@ -114,12 +121,6 @@ void HughesPowerWatchdog::gattc_event_handler(esp_gattc_cb_event_t event, esp_ga
     case ESP_GATTC_DISCONNECT_EVT: {
       ESP_LOGW(TAG, "Disconnected!");
       this->status_set_warning();
-      // TODO: Should we clear the state of the sensors.
-      //       Depends on if we are going to stay connected all the time
-      //       or if we should connect , then handle a few, disconnect , sleep 10 seconds
-      //       and do it over.  Since none of these are expected to be battery powered
-      //       lets keep connected for now.
-
       break;
     }
     case ESP_GATTC_SEARCH_CMPL_EVT: {
@@ -127,7 +128,6 @@ void HughesPowerWatchdog::gattc_event_handler(esp_gattc_cb_event_t event, esp_ga
       auto *chr = this->parent()->get_characteristic(this->service_uuid_, this->char_uuid_);
       if (chr == nullptr) {
         this->status_set_warning();
-        // mark sensors unavailable?
         ESP_LOGW(TAG, "No sensor characteristic found at service %s char %s", this->service_uuid_.to_string().c_str(),
                  this->char_uuid_.to_string().c_str());
         break;
@@ -159,6 +159,16 @@ void HughesPowerWatchdog::gattc_event_handler(esp_gattc_cb_event_t event, esp_ga
   }
 }
 
+/**
+ * @brief Internal function to decode the BLE data and extract the fields of interest.
+ * Watchdog sends two 20 byte chunks that once combined makes up a data message.  
+ * 
+ * For 50A (two hot lines) each line has its own message.  
+ * For 30A (one hot line) there should only be one message and it should indicate line 1. 
+ * 
+ * @param value - ble data (array of bytes)
+ * @param value_len - length of ble data
+ */
 void HughesPowerWatchdog::process_tx_notification(uint8_t *value, uint16_t value_len) {
   if (value_len != 20) {
     ESP_LOGW(TAG, "process_tx_notification - unsupported value length (%d)", value_len);
@@ -230,49 +240,119 @@ void HughesPowerWatchdog::process_tx_notification(uint8_t *value, uint16_t value
     this->line2_p_ = watts;
     this->line2_ce_ = energy;
   }
+  this->new_data_ = true;
 }
 
+/**
+ * @brief Internal function to update the state of
+ * all valid sensors.  Parameter controls if 
+ * real data will be used or if NAN should be reported
+ * so that state shows up as unavailable.
+ * 
+ * @param UseInstanceData  true: use data
+ *                         false: use NAN
+ */
+void HughesPowerWatchdog::ReportSensor(bool UseInstanceData) {
+  if (UseInstanceData) {
+    // Voltage (volts)
+    if (this->voltage_l1_ != nullptr) {
+      this->voltage_l1_->publish_state(this->line1_v_);
+    }
+    if (this->voltage_l2_ != nullptr) {
+      this->voltage_l2_->publish_state(this->line2_v_);
+    }
+
+    // Current (amps)
+    if (this->current_l1_ != nullptr) {
+      this->current_l1_->publish_state(this->line1_c_);
+    }
+    if (this->current_l2_ != nullptr) {
+      this->current_l2_->publish_state(this->line2_c_);
+    }
+
+    // Power (watts)
+    if (this->power_l1_ != nullptr) {
+      this->power_l1_->publish_state(this->line1_p_);
+    }
+    if (this->power_l2_ != nullptr) {
+      this->power_l2_->publish_state(this->line2_p_);
+    }
+    if (this->power_combined_ != nullptr) {
+      this->power_combined_->publish_state(this->line2_p_ + this->line1_p_);
+    }
+
+    // Cumulative Power since user reset (KilowattHours)
+    if (this->cumulative_energy_ != nullptr) {
+      this->cumulative_energy_->publish_state(this->line1_ce_ + this->line2_ce_);
+    }
+
+    // Error codes and help text
+    if (this->error_code_ != nullptr) {
+      this->error_code_->publish_state(this->error_code_value_);
+    }
+    if (this->error_text_ != nullptr) {
+      this->error_text_->publish_state(ErrorText[this->error_code_value_]);
+    }
+  } else {
+    if (this->voltage_l1_ != nullptr) {
+      this->voltage_l1_->publish_state(NAN);
+    }
+    if (this->voltage_l2_ != nullptr) {
+      this->voltage_l2_->publish_state(NAN);
+    }
+
+    // Current (amps)
+    if (this->current_l1_ != nullptr) {
+      this->current_l1_->publish_state(NAN);
+    }
+    if (this->current_l2_ != nullptr) {
+      this->current_l2_->publish_state(NAN);
+    }
+
+    // Power (watts)
+    if (this->power_l1_ != nullptr) {
+      this->power_l1_->publish_state(NAN);
+    }
+    if (this->power_l2_ != nullptr) {
+      this->power_l2_->publish_state(NAN);
+    }
+    if (this->power_combined_ != nullptr) {
+      this->power_combined_->publish_state(NAN);
+    }
+
+    // Cumulative Power since user reset (KilowattHours)
+    if (this->cumulative_energy_ != nullptr) {
+      this->cumulative_energy_->publish_state(NAN);
+    }
+
+    // Error codes and help text
+    if (this->error_code_ != nullptr) {
+      this->error_code_->publish_state(NAN);
+    }
+    if (this->error_text_ != nullptr) {
+      this->error_text_->publish_state("");
+    }
+  }
+}
+
+/**
+ * @brief PolledComponents have an update function
+ * that is called at each polling period.  If new data exists
+ * and the sensor is connected then report data.  
+ * 
+ */
 void HughesPowerWatchdog::update() {
   ESP_LOGV(TAG, "Update Called");
 
-  // Voltage (volts)
-  if (this->voltage_l1_ != nullptr) {
-    this->voltage_l1_->publish_state(this->line1_v_);
-  }
-  if (this->voltage_l2_ != nullptr) {
-    this->voltage_l2_->publish_state(this->line2_v_);
-  }
-
-  // Current (amps)
-  if (this->current_l1_ != nullptr) {
-    this->current_l1_->publish_state(this->line1_c_);
-  }
-  if (this->current_l2_ != nullptr) {
-    this->current_l2_->publish_state(this->line2_c_);
-  }
-
-  // Power (watts)
-  if (this->power_l1_ != nullptr) {
-    this->power_l1_->publish_state(this->line1_p_);
-  }
-  if (this->power_l2_ != nullptr) {
-    this->power_l2_->publish_state(this->line2_p_);
-  }
-  if (this->power_combined_ != nullptr) {
-    this->power_combined_->publish_state(this->line2_p_ + this->line1_p_);
-  }
-
-  // Cumulative Power since user reset (KilowattHours)
-  if (this->cumulative_energy_ != nullptr) {
-    this->cumulative_energy_->publish_state(this->line1_ce_ + this->line2_ce_);
-  }
-
-  // Error codes and help text
-  if (this->error_code_ != nullptr) {
-    this->error_code_->publish_state(this->error_code_value_);
-  }
-  if (this->error_text_ != nullptr) {
-    this->error_text_->publish_state(ErrorText[this->error_code_value_]);
+  if (this->node_state != esp32_ble_tracker::ClientState::ESTABLISHED) {
+    ESP_LOGV(TAG, "Not Established");
+    this->ReportSensor(false);
+  } else if (this->new_data_ == false) {
+    ESP_LOGV(TAG, "No New Data");
+    // Just don't report this update.
+  } else {
+    this->ReportSensor(true);
+    this->new_data_ = false;
   }
 }
 

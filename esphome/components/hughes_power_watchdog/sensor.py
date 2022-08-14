@@ -13,7 +13,6 @@ from esphome.const import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_VOLTAGE,
     ICON_CURRENT_AC,
-    ICON_POWER,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_NONE,
     STATE_CLASS_TOTAL_INCREASING,
@@ -40,8 +39,9 @@ CONF_ERROR_CODE = "error_code_value"
 CONF_ERROR_TEXT = "error_code_text"
 
 
-ICON_VOLTAGE = "mdi:flash-triangle"
-ICON_TOTAL_POWER = "mdi:sine-wave"
+ICON_VOLTAGE = "mdi:sine-wave"
+ICON_POWER_WATT = "mdi:lightning-bolt"
+ICON_TOTAL_POWER = "mdi:lightning-bolt-circle"
 ICON_ERROR_CODE = "mdi:alert-circle"
 ICON_ERROR_TEXT = "mdi:tooltip-text"
 
@@ -74,7 +74,7 @@ CONFIG_SCHEMA = (
             ),
             cv.Optional(CONF_POWER_LINE_1): sensor.sensor_schema(
                 unit_of_measurement=UNIT_WATT,
-                icon=ICON_POWER,
+                icon=ICON_POWER_WATT,
                 accuracy_decimals=2,
                 device_class=DEVICE_CLASS_POWER,
                 state_class=STATE_CLASS_MEASUREMENT,
@@ -95,14 +95,14 @@ CONFIG_SCHEMA = (
             ),
             cv.Optional(CONF_POWER_LINE_2): sensor.sensor_schema(
                 unit_of_measurement=UNIT_WATT,
-                icon=ICON_POWER,
+                icon=ICON_POWER_WATT,
                 accuracy_decimals=2,
                 device_class=DEVICE_CLASS_POWER,
                 state_class=STATE_CLASS_MEASUREMENT,
             ),
             cv.Optional(CONF_POWER_COMBINED): sensor.sensor_schema(
                 unit_of_measurement=UNIT_WATT,
-                icon=ICON_POWER,
+                icon=ICON_POWER_WATT,
                 accuracy_decimals=2,
                 device_class=DEVICE_CLASS_POWER,
                 state_class=STATE_CLASS_MEASUREMENT,
