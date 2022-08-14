@@ -60,7 +60,8 @@ static const std::string Error_09 = "The Power Watchdog is sensing the surge abs
   many surges before they're done.  Fortunately, the Watchdog's surge absorption board is replaceable. Go to\
   hughesautoformers.com and order a new board.";
 
-static const std::string ErrorText[] = {Error_00, Error_01, Error_02, Error_03, Error_04, Error_05, Error_06, Error_07, Error_08, Error_09};
+static const std::string ErrorText[] = {Error_00, Error_01, Error_02, Error_03, Error_04,
+                                        Error_05, Error_06, Error_07, Error_08, Error_09};
 
 #define ReadBigEndianInt32(data, offset) \
   ((data[offset + 3] << 0) | (data[offset + 2] << 8) | (data[offset + 1] << 16) | (data[offset + 0] << 24))
@@ -233,6 +234,8 @@ void HughesPowerWatchdog::process_tx_notification(uint8_t *value, uint16_t value
 
 void HughesPowerWatchdog::update() {
   ESP_LOGV(TAG, "Update Called");
+
+  // Voltage (volts)
   if (this->voltage_l1_ != nullptr) {
     this->voltage_l1_->publish_state(this->line1_v_);
   }
@@ -240,6 +243,7 @@ void HughesPowerWatchdog::update() {
     this->voltage_l2_->publish_state(this->line2_v_);
   }
 
+  // Current (amps)
   if (this->current_l1_ != nullptr) {
     this->current_l1_->publish_state(this->line1_c_);
   }
@@ -247,21 +251,26 @@ void HughesPowerWatchdog::update() {
     this->current_l2_->publish_state(this->line2_c_);
   }
 
+  // Power (watts)
   if (this->power_l1_ != nullptr) {
     this->power_l1_->publish_state(this->line1_p_);
   }
   if (this->power_l2_ != nullptr) {
     this->power_l2_->publish_state(this->line2_p_);
   }
+  if (this->power_combined_ != nullptr) {
+    this->power_combined_->publish_state(this->line2_p_ + this->line1_p_);
+  }
 
+  // Cumulative Power since user reset (KilowattHours)
   if (this->cumulative_energy_ != nullptr) {
     this->cumulative_energy_->publish_state(this->line1_ce_ + this->line2_ce_);
   }
 
+  // Error codes and help text
   if (this->error_code_ != nullptr) {
     this->error_code_->publish_state(this->error_code_value_);
   }
-
   if (this->error_text_ != nullptr) {
     this->error_text_->publish_state(ErrorText[this->error_code_value_]);
   }
