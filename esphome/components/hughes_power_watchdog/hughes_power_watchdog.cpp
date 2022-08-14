@@ -97,7 +97,7 @@ void HughesPowerWatchdog::dump_config() {
   LOG_SENSOR("  ", "Power Line 2", this->power_l2_);
   LOG_SENSOR("  ", "Cumulative Energy", this->cumulative_energy_);
   LOG_SENSOR("  ", "Error Code Value", this->error_code_);
-  //LOG_TEXT_SENSOR("  ", "Error Code String", this->error_text_);
+  LOG_TEXT_SENSOR("  ", "Error Text String", this->error_text_);
 }
 
 void HughesPowerWatchdog::gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if,
@@ -262,9 +262,9 @@ void HughesPowerWatchdog::update() {
     this->error_code_->publish_state(this->error_code_value_);
   }
 
-  //if(this->error_text_ != nullptr) {
-  //  this->error_text_->publish_state(ErrorText[this->error_code_value_]);
-  //}
+  if(this->error_text_ != nullptr) {
+    this->error_text_->publish_state(Error_00);
+  }
 }
 
 }  // namespace hughes_power_watchdog

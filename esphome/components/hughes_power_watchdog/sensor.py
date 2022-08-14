@@ -23,7 +23,7 @@ from esphome.const import (
     UNIT_VOLT,
     UNIT_WATT
 )
-#from esphome.esphome.components.ble_client import text_sensor
+
 _CONF_LINE_1 = "_line_1"
 _CONF_LINE_2 = "_line_2"
 
@@ -44,7 +44,7 @@ ICON_TOTAL_POWER = "mdi:sine-wave"
 ICON_ERROR_CODE = "mdi:alert-circle"
 ICON_ERROR_TEXT = "mdi:tooltip-text"
 
-
+AUTO_LOAD = ["text_sensor"]
 CODEOWNERS = ["@spbrogan"]
 DEPENDENCIES = ["ble_client"]
 
@@ -112,9 +112,9 @@ CONFIG_SCHEMA = (
                 device_class=DEVICE_CLASS_EMPTY,
                 state_class=STATE_CLASS_NONE,    
             ),
-            #cv.Optional(CONF_ERROR_TEXT): text_sensor.text_sensor_schema(
-            #    icon=ICON_ERROR_TEXT
-            #),
+             cv.Optional(CONF_ERROR_TEXT): text_sensor.text_sensor_schema(
+                icon=ICON_ERROR_TEXT
+            ),
         }
     )
     .extend(cv.polling_component_schema("5sec"))
@@ -158,7 +158,6 @@ async def to_code(config):
         sens = await sensor.new_sensor(config[CONF_ERROR_CODE])
         cg.add(var.set_error_code(sens))
     
-    #if CONF_ERROR_TEXT in config:
-    #    sens = await text_sensor.new_text_sensor(config[CONF_ERROR_TEXT])
-    #    cg.add(var.set_error_text(sens))
-
+    if CONF_ERROR_TEXT in config:
+        sens = await text_sensor.new_text_sensor(config[CONF_ERROR_TEXT])
+        cg.add(var.set_error_text(sens))
