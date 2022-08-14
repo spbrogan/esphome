@@ -34,11 +34,11 @@ class HughesPowerWatchdog : public PollingComponent, public ble_client::BLEClien
 
   void set_power_line_1(sensor::Sensor *power) { power_l1_ = power; };  // watts
   void set_power_line_2(sensor::Sensor *power) { power_l2_ = power; };  // watts
+  void set_power_combined(sensor::Sensor *power) { power_combined_ = power; };  // watts
 
   void set_cumulative_energy(sensor::Sensor *energy) { cumulative_energy_ = energy; };  // kilowatt hours
 
   void set_error_code(sensor::Sensor *error) { error_code_ = error; }; // error code between 0 - 9
-
   void set_error_text(text_sensor::TextSensor *error_text) { error_text_ = error_text; }; //report the error message as text
   uint16_t handle;
 
@@ -50,6 +50,7 @@ class HughesPowerWatchdog : public PollingComponent, public ble_client::BLEClien
   sensor::Sensor *current_l2_{nullptr};
   sensor::Sensor *power_l1_{nullptr};
   sensor::Sensor *power_l2_{nullptr};
+  sensor::Sensor *power_combined_{nullptr};
   sensor::Sensor *cumulative_energy_{nullptr};
   sensor::Sensor *error_code_{nullptr};
   text_sensor::TextSensor *error_text_{nullptr};

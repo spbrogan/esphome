@@ -11,7 +11,6 @@ from esphome.const import (
     DEVICE_CLASS_EMPTY,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
-    DEVICE_CLASS_PROBLEM,
     DEVICE_CLASS_VOLTAGE,
     ICON_CURRENT_AC,
     ICON_POWER,
@@ -34,6 +33,8 @@ CONF_POWER_LINE_1 = CONF_POWER + _CONF_LINE_1
 CONF_VOLTAGE_LINE_2 = CONF_VOLTAGE + _CONF_LINE_2
 CONF_CURRENT_LINE_2 = CONF_CURRENT + _CONF_LINE_2
 CONF_POWER_LINE_2 = CONF_POWER + _CONF_LINE_2
+
+CONF_POWER_COMBINED = "combined_" + CONF_POWER
 
 CONF_ERROR_CODE = "error_code_value"
 CONF_ERROR_TEXT = "error_code_text"
@@ -99,6 +100,13 @@ CONFIG_SCHEMA = (
                 device_class=DEVICE_CLASS_POWER,
                 state_class=STATE_CLASS_MEASUREMENT,
             ),
+            cv.Optional(CONF_POWER_COMBINED): sensor.sensor_schema(
+                unit_of_measurement=UNIT_WATT,
+                icon=ICON_POWER,
+                accuracy_decimals=2,
+                device_class=DEVICE_CLASS_POWER,
+                state_class=STATE_CLASS_MEASUREMENT,
+            ),
             cv.Optional(CONF_TOTAL_POWER): sensor.sensor_schema(
                 unit_of_measurement=UNIT_KILOWATT_HOURS,
                 icon=ICON_TOTAL_POWER,
@@ -149,6 +157,10 @@ async def to_code(config):
     if CONF_POWER_LINE_2 in config:
         sens = await sensor.new_sensor(config[CONF_POWER_LINE_2])
         cg.add(var.set_power_line_2(sens))
+
+    if CONF_POWER_COMBINED in config:
+        sens = await sensor.new_sensor(config[CONF_POWER_COMBINED])
+        cg.add(var.set_power_combined(sens))
 
     if CONF_TOTAL_POWER in config:
         sens = await sensor.new_sensor(config[CONF_TOTAL_POWER])
