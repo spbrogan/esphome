@@ -7,7 +7,7 @@ namespace hughes_power_watchdog {
 
 static const char *const TAG = "hughes_power_watchdog";
 
-static const char *const Error_00 = "This is a test.  I just want to see this";  // Not error.  Leave blank
+static const std::string Error_00 = "This is a test.  I just want to see this";  // Not error.  Leave blank
 
 static const char *const Error_01 =
     "Your Watchdog has determined that the Line 1 voltage coming from the park has either\
@@ -263,7 +263,7 @@ void HughesPowerWatchdog::update() {
   }
 
   if(this->error_text_ != nullptr) {
-    this->error_text_->publish_state(*Error_00);
+    this->error_text_->publish_state(Error_00);
   }
 }
 
