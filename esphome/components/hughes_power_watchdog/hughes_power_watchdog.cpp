@@ -60,7 +60,7 @@ static const char *const Error_09 = "The Power Watchdog is sensing the surge abs
   many surges before they're done.  Fortunately, the Watchdog's surge absorption board is replaceable. Go to\
   hughesautoformers.com and order a new board.";
 
-  static const char** const ErrorText[] = {Error_00, Error_01, Error_02, Error_03, Error_04, Error_05, Error_06, Error_07, Error_08, Error_09};
+  //static const char** const ErrorText[] = {Error_00, Error_01, Error_02, Error_03, Error_04, Error_05, Error_06, Error_07, Error_08, Error_09};
 
 #define ReadBigEndianInt32(data, offset) \
   ((data[offset + 3] << 0) | (data[offset + 2] << 8) | (data[offset + 1] << 16) | (data[offset + 0] << 24))
@@ -97,7 +97,7 @@ void HughesPowerWatchdog::dump_config() {
   LOG_SENSOR("  ", "Power Line 2", this->power_l2_);
   LOG_SENSOR("  ", "Cumulative Energy", this->cumulative_energy_);
   LOG_SENSOR("  ", "Error Code Value", this->error_code_);
-  LOG_TEXT_SENSOR("  ", "Error Code String", this->error_text_);
+  //LOG_TEXT_SENSOR("  ", "Error Code String", this->error_text_);
 }
 
 void HughesPowerWatchdog::gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if,
@@ -262,9 +262,9 @@ void HughesPowerWatchdog::update() {
     this->error_code_->publish_state(this->error_code_value_);
   }
 
-  if(this->error_text_ != nullptr) {
-    this->error_text_->publish_state(ErrorText[this->error_code_value_]);
-  }
+  //if(this->error_text_ != nullptr) {
+  //  this->error_text_->publish_state(ErrorText[this->error_code_value_]);
+  //}
 }
 
 }  // namespace hughes_power_watchdog

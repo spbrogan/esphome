@@ -46,7 +46,7 @@ ICON_ERROR_TEXT = "mdi:tooltip-text"
 
 
 CODEOWNERS = ["@spbrogan"]
-DEPENDENCIES = ["ble_client", "text_sensor"]
+DEPENDENCIES = ["ble_client"]
 
 hughes_power_watchdog_ns = cg.esphome_ns.namespace("hughes_power_watchdog")
 HughesPowerWatchdog = hughes_power_watchdog_ns.class_(
@@ -112,9 +112,9 @@ CONFIG_SCHEMA = (
                 device_class=DEVICE_CLASS_EMPTY,
                 state_class=STATE_CLASS_NONE,    
             ),
-            cv.Optional(CONF_ERROR_TEXT): text_sensor.text_sensor_schema(
-                icon=ICON_ERROR_TEXT
-            ),
+            #cv.Optional(CONF_ERROR_TEXT): text_sensor.text_sensor_schema(
+            #    icon=ICON_ERROR_TEXT
+            #),
         }
     )
     .extend(cv.polling_component_schema("5sec"))
@@ -158,7 +158,7 @@ async def to_code(config):
         sens = await sensor.new_sensor(config[CONF_ERROR_CODE])
         cg.add(var.set_error_code(sens))
     
-    if CONF_ERROR_TEXT in config:
-        sens = await text_sensor.new_text_sensor(config[CONF_ERROR_TEXT])
-        cg.add(var.set_error_text(sens))
+    #if CONF_ERROR_TEXT in config:
+    #    sens = await text_sensor.new_text_sensor(config[CONF_ERROR_TEXT])
+    #    cg.add(var.set_error_text(sens))
 
