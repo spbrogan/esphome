@@ -263,7 +263,7 @@ void HughesPowerWatchdog::update() {
   }
 
   if(this->error_text_ != nullptr) {
-    this->error_text_->publish_state(Error_00);
+    this->error_text_->publish_state(*Error_00);
   }
 }
 
