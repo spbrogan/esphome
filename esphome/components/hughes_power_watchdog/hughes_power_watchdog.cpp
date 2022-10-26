@@ -66,7 +66,6 @@ static const std::string Error_09 = "The Power Watchdog is sensing the surge abs
 static const std::string ErrorText[] = {Error_00, Error_01, Error_02, Error_03, Error_04,
                                         Error_05, Error_06, Error_07, Error_08, Error_09};
 
-
 // Macro to convert 4 bytes of big endian data into int
 #define ReadBigEndianInt32(data, offset) \
   ((data[offset + 3] << 0) | (data[offset + 2] << 8) | (data[offset + 1] << 16) | (data[offset + 0] << 24))
@@ -134,8 +133,8 @@ void HughesPowerWatchdog::gattc_event_handler(esp_gattc_cb_event_t event, esp_ga
       }
       this->handle = chr->handle;
 
-      auto status =
-          esp_ble_gattc_register_for_notify(this->parent()->gattc_if, this->parent()->remote_bda, chr->handle);
+      auto status = esp_ble_gattc_register_for_notify(this->parent()->get_gattc_if(), this->parent()->get_remote_bda(),
+                                                      chr->handle);
       if (status) {
         ESP_LOGW(TAG, "esp_ble_gattc_register_for_notify failed, status=%d", status);
       }
@@ -143,7 +142,7 @@ void HughesPowerWatchdog::gattc_event_handler(esp_gattc_cb_event_t event, esp_ga
     }
 
     case ESP_GATTC_NOTIFY_EVT: {
-      if (param->notify.conn_id != this->parent()->conn_id || param->notify.handle != this->handle)
+      if (param->notify.conn_id != this->parent()->get_conn_id() || param->notify.handle != this->handle)
         break;
       ESP_LOGV(TAG, "ESP_GATTC_NOTIFY_EVT: handle=0x%x, data length=%d", param->notify.handle, param->notify.value_len);
       this->process_tx_notification(param->notify.value, param->notify.value_len);
@@ -161,11 +160,11 @@ void HughesPowerWatchdog::gattc_event_handler(esp_gattc_cb_event_t event, esp_ga
 
 /**
  * @brief Internal function to decode the BLE data and extract the fields of interest.
- * Watchdog sends two 20 byte chunks that once combined makes up a data message.  
- * 
- * For 50A (two hot lines) each line has its own message.  
- * For 30A (one hot line) there should only be one message and it should indicate line 1. 
- * 
+ * Watchdog sends two 20 byte chunks that once combined makes up a data message.
+ *
+ * For 50A (two hot lines) each line has its own message.
+ * For 30A (one hot line) there should only be one message and it should indicate line 1.
+ *
  * @param value - ble data (array of bytes)
  * @param value_len - length of ble data
  */
@@ -245,10 +244,10 @@ void HughesPowerWatchdog::process_tx_notification(uint8_t *value, uint16_t value
 
 /**
  * @brief Internal function to update the state of
- * all valid sensors.  Parameter controls if 
+ * all valid sensors.  Parameter controls if
  * real data will be used or if NAN should be reported
  * so that state shows up as unavailable.
- * 
+ *
  * @param UseInstanceData  true: use data
  *                         false: use NAN
  */
@@ -338,8 +337,8 @@ void HughesPowerWatchdog::ReportSensor(bool UseInstanceData) {
 /**
  * @brief PolledComponents have an update function
  * that is called at each polling period.  If new data exists
- * and the sensor is connected then report data.  
- * 
+ * and the sensor is connected then report data.
+ *
  */
 void HughesPowerWatchdog::update() {
   ESP_LOGV(TAG, "Update Called");
